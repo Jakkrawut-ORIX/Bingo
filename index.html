@@ -1,243 +1,824 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
 
-<title>CorpusX Search</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-<style>
+  <title>ค้นหาข้อมูลบริษัท</title>
 
-body{
-    font-family:Arial;
-    background:#f4f6f9;
-    margin:0;
-    padding:30px;
-}
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-.container{
-    max-width:1000px;
-    margin:auto;
-}
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 32px 16px;
+      font-family:
+        Arial,
+        "Noto Sans Thai",
+        Tahoma,
+        sans-serif;
+      color: #172033;
+      background:
+        linear-gradient(
+          135deg,
+          #eef3ff 0%,
+          #f7f9fc 55%,
+          #edf7f4 100%
+        );
+    }
 
-.card{
-    background:white;
-    padding:20px;
-    border-radius:10px;
-    box-shadow:0 2px 10px rgba(0,0,0,.1);
-}
+    .container {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+    }
 
-input{
-    width:100%;
-    padding:10px;
-    margin-top:5px;
-    margin-bottom:15px;
-}
+    .header {
+      margin-bottom: 20px;
+    }
 
-button{
-    padding:10px 20px;
-    background:#2563eb;
-    color:white;
-    border:none;
-    border-radius:5px;
-    cursor:pointer;
-}
+    .header h1 {
+      margin: 0 0 6px;
+      color: #10245c;
+      font-size: 30px;
+    }
 
-button:hover{
-    background:#1d4ed8;
-}
+    .header p {
+      margin: 0;
+      color: #64718a;
+    }
 
-.loading{
-    color:red;
-    display:none;
-}
+    .card {
+      padding: 24px;
+      margin-bottom: 20px;
+      background: #ffffff;
+      border: 1px solid #e4e9f2;
+      border-radius: 16px;
+      box-shadow:
+        0 10px 30px rgba(16, 36, 92, 0.08);
+    }
 
-table{
-    width:100%;
-    border-collapse:collapse;
-}
+    .label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
 
-th,td{
-    border:1px solid #ddd;
-    padding:8px;
-}
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+    }
 
-th{
-    background:#2563eb;
-    color:white;
-}
+    input {
+      width: 100%;
+      height: 46px;
+      padding: 0 14px;
+      color: #172033;
+      font-size: 16px;
+      border: 1px solid #bdc7d8;
+      border-radius: 9px;
+      outline: none;
+    }
 
-</style>
+    input:focus {
+      border-color: #1747ad;
+      box-shadow:
+        0 0 0 3px rgba(23, 71, 173, 0.12);
+    }
 
+    button {
+      min-width: 130px;
+      height: 46px;
+      padding: 0 20px;
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 700;
+      border: 0;
+      border-radius: 9px;
+      background: #1747ad;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #103989;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      background: #8a9abc;
+    }
+
+    .message {
+      display: none;
+      padding: 13px 15px;
+      margin-top: 16px;
+      border-radius: 9px;
+      line-height: 1.5;
+    }
+
+    .message.loading {
+      display: block;
+      color: #1747ad;
+      background: #edf3ff;
+      border: 1px solid #cbdcff;
+    }
+
+    .message.error {
+      display: block;
+      color: #991b1b;
+      background: #fff1f1;
+      border: 1px solid #ffcaca;
+    }
+
+    .message.success {
+      display: block;
+      color: #11663a;
+      background: #eefbf4;
+      border: 1px solid #c4ecd6;
+    }
+
+    .result-card {
+      display: none;
+    }
+
+    .result-card.visible {
+      display: block;
+    }
+
+    .result-title {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .result-title h2 {
+      margin: 0;
+      color: #10245c;
+      font-size: 22px;
+    }
+
+    .registration-badge {
+      padding: 7px 10px;
+      color: #1747ad;
+      white-space: nowrap;
+      background: #edf3ff;
+      border-radius: 999px;
+      font-size: 13px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .summary-item {
+      min-height: 80px;
+      padding: 14px;
+      background: #f8faff;
+      border: 1px solid #e5eaf4;
+      border-radius: 10px;
+    }
+
+    .summary-item.full {
+      grid-column: 1 / -1;
+    }
+
+    .summary-label {
+      margin-bottom: 5px;
+      color: #67758c;
+      font-size: 13px;
+    }
+
+    .summary-value {
+      color: #172033;
+      font-weight: 700;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    details {
+      margin-top: 22px;
+      border-top: 1px solid #e4e9f2;
+      padding-top: 18px;
+    }
+
+    summary {
+      color: #1747ad;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    pre {
+      margin: 14px 0 0;
+      padding: 16px;
+      max-height: 500px;
+      overflow: auto;
+      color: #d9e4ff;
+      background: #14213d;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .footer {
+      margin-top: 16px;
+      color: #788398;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 20px 12px;
+      }
+
+      .card {
+        padding: 18px;
+      }
+
+      .search-row {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-item.full {
+        grid-column: auto;
+      }
+
+      .result-title {
+        display: block;
+      }
+
+      .registration-badge {
+        display: inline-block;
+        margin-top: 10px;
+      }
+    }
+  </style>
 </head>
+
 <body>
+  <main class="container">
+    <header class="header">
+      <h1>ค้นหาข้อมูลบริษัท</h1>
+      <p>
+        ค้นหาด้วยเลขทะเบียนนิติบุคคล 13 หลัก
+      </p>
+    </header>
 
-<div class="container">
+    <section class="card">
+      <label
+        class="label"
+        for="registrationId"
+      >
+        เลขทะเบียนนิติบุคคล
+      </label>
 
-<div class="card">
+      <div class="search-row">
+        <input
+          id="registrationId"
+          type="text"
+          inputmode="numeric"
+          maxlength="13"
+          autocomplete="off"
+          placeholder="ตัวอย่าง 0105553120917"
+        >
 
-<h2>ค้นหาข้อมูลบริษัท</h2>
+        <button
+          id="searchButton"
+          type="button"
+        >
+          ค้นหา
+        </button>
+      </div>
 
-<label>เลขทะเบียนบริษัท</label>
+      <div
+        id="message"
+        class="message"
+        role="status"
+        aria-live="polite"
+      ></div>
+    </section>
 
-<input
-id="registrationId"
-placeholder="0105538107794">
+    <section
+      id="resultCard"
+      class="card result-card"
+    >
+      <div class="result-title">
+        <h2>ผลการค้นหา</h2>
 
-<button onclick="searchCompany()">
+        <span
+          id="registrationBadge"
+          class="registration-badge"
+        ></span>
+      </div>
 
-ค้นหา
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-label">
+            ชื่อบริษัท
+          </div>
 
-</button>
+          <div
+            id="companyName"
+            class="summary-value"
+          >
+            -
+          </div>
+        </div>
 
-<p
-class="loading"
-id="loading">
+        <div class="summary-item">
+          <div class="summary-label">
+            สถานภาพกิจการ
+          </div>
 
-กำลังค้นหา...
+          <div
+            id="companyStatus"
+            class="summary-value"
+          >
+            -
+          </div>
+        </div>
 
-</p>
+        <div class="summary-item">
+          <div class="summary-label">
+            ทุนจดทะเบียน
+          </div>
 
-</div>
+          <div
+            id="registeredCapital"
+            class="summary-value"
+          >
+            -
+          </div>
+        </div>
 
-<br>
+        <div class="summary-item">
+          <div class="summary-label">
+            เบอร์โทรศัพท์
+          </div>
 
-<div
-class="card"
-id="resultCard"
-style="display:none">
+          <div
+            id="telephoneNo"
+            class="summary-value"
+          >
+            -
+          </div>
+        </div>
 
-<h3>ข้อมูลบริษัท</h3>
+        <div class="summary-item full">
+          <div class="summary-label">
+            ที่อยู่
+          </div>
 
-<p>
-ชื่อบริษัท :
-<span id="companyName"></span>
-</p>
+          <div
+            id="address"
+            class="summary-value"
+          >
+            -
+          </div>
+        </div>
+      </div>
 
-<p>
-เลขทะเบียน :
-<span id="companyNo"></span>
-</p>
+      <details>
+        <summary>
+          ดูข้อมูล JSON ทั้งหมด
+        </summary>
 
-<p>
-สถานะ :
-<span id="companyStatus"></span>
-</p>
+        <pre id="rawJson"></pre>
+      </details>
+    </section>
 
-<p>
-ทุนจดทะเบียน :
-<span id="capital"></span>
-</p>
+    <div class="footer">
+      ระบบเชื่อมต่อข้อมูลผ่าน Cloudflare Worker
+    </div>
+  </main>
 
-</div>
+  <script>
+    /*
+     * URL Worker จริงของคุณ
+     */
+    const WORKER_URL =
+      "https://bingo.jakkrawut-na.workers.dev/search";
 
-</div>
+    /*
+     * ต้องตรงกับ API_KEY ที่ตั้งใน Cloudflare
+     */
+    const API_KEY =
+      "jkn-corpusx-2026-8Aq7mG3pL9sX2vR6";
 
-<script>
+    const registrationInput =
+      document.getElementById("registrationId");
 
-const WORKER_URL =
-"https://bingo.jakkrawut-na.workers.dev";
+    const searchButton =
+      document.getElementById("searchButton");
 
-const API_KEY =
-"ORIX2026";
+    const messageBox =
+      document.getElementById("message");
 
-async function searchCompany(){
+    const resultCard =
+      document.getElementById("resultCard");
 
-    const regNo =
-      document.getElementById(
-        "registrationId"
-      ).value;
+    /*
+     * ให้กรอกเฉพาะตัวเลข
+     */
+    registrationInput.addEventListener(
+      "input",
+      function () {
+        registrationInput.value =
+          registrationInput.value
+            .replace(/\D/g, "")
+            .slice(0, 13);
+      }
+    );
 
-    if(!regNo){
+    /*
+     * กด Enter เพื่อค้นหา
+     */
+    registrationInput.addEventListener(
+      "keydown",
+      function (event) {
+        if (event.key === "Enter") {
+          searchCompany();
+        }
+      }
+    );
 
-        alert(
-          "กรุณากรอกเลขทะเบียน"
+    searchButton.addEventListener(
+      "click",
+      searchCompany
+    );
+
+    async function searchCompany() {
+      const registrationId =
+        registrationInput.value.trim();
+
+      hideResult();
+
+      if (!/^\d{13}$/.test(registrationId)) {
+        showMessage(
+          "กรุณากรอกเลขทะเบียนนิติบุคคลให้ครบ 13 หลัก",
+          "error"
         );
 
+        registrationInput.focus();
         return;
-    }
+      }
 
-    document
-      .getElementById(
-        "loading"
-      ).style.display="block";
+      setLoading(true);
 
-    try{
+      try {
+        const response = await fetch(
+          WORKER_URL,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": API_KEY
+            },
+            body: JSON.stringify({
+              registrationId: registrationId
+            })
+          }
+        );
 
-        const response =
-          await fetch(
-            WORKER_URL,
-            {
-              method:"POST",
-              headers:{
-                "Content-Type":
-                  "application/json",
-                "x-api-key":
-                  API_KEY
-              },
-              body:JSON.stringify({
-                registrationId:
-                  regNo
-              })
-            }
+        /*
+         * อ่านเป็น text ก่อน
+         * ป้องกัน Unexpected end of JSON input
+         */
+        const responseText =
+          await response.text();
+
+        let result;
+
+        try {
+          result = responseText
+            ? JSON.parse(responseText)
+            : null;
+        } catch {
+          throw new Error(
+            "Worker ส่งข้อมูลกลับมาไม่ใช่ JSON: " +
+            responseText.substring(0, 300)
           );
+        }
 
-        const data =
-          await response.json();
+        if (!result) {
+          throw new Error(
+            "Worker ไม่ได้ส่งข้อมูลกลับมา"
+          );
+        }
 
-        console.log(data);
+        if (!response.ok || result.success !== true) {
+          const details =
+            result.detail ||
+            result.upstreamResponse?.data
+              ?.result_message ||
+            "";
 
-        const company =
-          data.companyInfo || {};
+          throw new Error(
+            result.message +
+            (details ? ": " + details : "")
+          );
+        }
 
-        document
-          .getElementById(
-            "companyName"
-          ).innerText =
-          company.companyName || "-";
+        renderResult(result);
+        showMessage(
+          "ค้นหาข้อมูลสำเร็จ",
+          "success"
+        );
+      } catch (error) {
+        console.error("Search error:", error);
 
-        document
-          .getElementById(
-            "companyNo"
-          ).innerText =
-          company.registrationNo || "-";
-
-        document
-          .getElementById(
-            "companyStatus"
-          ).innerText =
-          company.status || "-";
-
-        document
-          .getElementById(
-            "capital"
-          ).innerText =
-          company.registeredCapital || "-";
-
-        document
-          .getElementById(
-            "resultCard"
-          ).style.display="block";
-
+        if (
+          error instanceof TypeError &&
+          error.message === "Failed to fetch"
+        ) {
+          showMessage(
+            "เชื่อมต่อ Worker ไม่สำเร็จ กรุณาตรวจสอบ Worker URL, CORS และการ Deploy",
+            "error"
+          );
+        } else {
+          showMessage(
+            error.message ||
+            "เกิดข้อผิดพลาดในการค้นหา",
+            "error"
+          );
+        }
+      } finally {
+        setLoading(false);
+      }
     }
-    catch(err){
 
-      alert(err.message);
+    function renderResult(result) {
+      const corpusData = result.data || {};
 
+      /*
+       * รองรับกรณีข้อมูลบริษัทอยู่ด้านบน
+       * หรืออยู่ใน object ย่อย
+       */
+      const company =
+        findCompanyObject(corpusData);
+
+      const registrationNo =
+        firstValue(
+          company.registrationNo,
+          company.registrationId,
+          corpusData.registrationNo,
+          result.registrationId
+        );
+
+      const companyName =
+        firstValue(
+          company.companyName,
+          company.companyNameTH,
+          company.name,
+          corpusData.companyName
+        );
+
+      const companyStatus =
+        firstValue(
+          company.companyStatus,
+          company.status,
+          corpusData.companyStatus
+        );
+
+      const capital =
+        firstValue(
+          company.registeredCapital,
+          company.latestRegisteredCapital,
+          company.capital,
+          corpusData.registeredCapital
+        );
+
+      const address =
+        firstValue(
+          company.address,
+          company.companyAddress,
+          corpusData.address
+        );
+
+      const telephone =
+        firstValue(
+          company.telephoneNo,
+          company.telephone,
+          company.phone,
+          corpusData.telephoneNo
+        );
+
+      setText(
+        "registrationBadge",
+        registrationNo
+      );
+
+      setText(
+        "companyName",
+        companyName
+      );
+
+      setText(
+        "companyStatus",
+        companyStatus
+      );
+
+      setText(
+        "registeredCapital",
+        formatCapital(capital)
+      );
+
+      setText(
+        "address",
+        address
+      );
+
+      setText(
+        "telephoneNo",
+        telephone
+      );
+
+      document.getElementById(
+        "rawJson"
+      ).textContent =
+        JSON.stringify(corpusData, null, 2);
+
+      resultCard.classList.add("visible");
     }
-    finally{
 
-      document
-        .getElementById(
+    function findCompanyObject(data) {
+      if (!data || typeof data !== "object") {
+        return {};
+      }
+
+      const possibleObjects = [
+        data.companyInfo,
+        data.company,
+        data.companyDetail,
+        data.companyProfile,
+        data.profile,
+        data.data,
+        data.result,
+        data
+      ];
+
+      for (const item of possibleObjects) {
+        if (
+          item &&
+          typeof item === "object" &&
+          !Array.isArray(item)
+        ) {
+          if (
+            item.registrationNo ||
+            item.registrationId ||
+            item.companyName ||
+            item.companyStatus
+          ) {
+            return item;
+          }
+        }
+      }
+
+      /*
+       * ค้นหา object ย่อยแบบ recursive
+       */
+      return findObjectRecursive(data) || data;
+    }
+
+    function findObjectRecursive(value, depth = 0) {
+      if (
+        depth > 6 ||
+        !value ||
+        typeof value !== "object"
+      ) {
+        return null;
+      }
+
+      if (
+        value.registrationNo ||
+        value.registrationId ||
+        value.companyName ||
+        value.companyStatus
+      ) {
+        return value;
+      }
+
+      for (const child of Object.values(value)) {
+        if (child && typeof child === "object") {
+          const found =
+            findObjectRecursive(child, depth + 1);
+
+          if (found) {
+            return found;
+          }
+        }
+      }
+
+      return null;
+    }
+
+    function firstValue(...values) {
+      for (const value of values) {
+        if (
+          value !== undefined &&
+          value !== null &&
+          String(value).trim() !== ""
+        ) {
+          return value;
+        }
+      }
+
+      return "-";
+    }
+
+    function formatCapital(value) {
+      if (
+        value === "-" ||
+        value === null ||
+        value === undefined ||
+        value === ""
+      ) {
+        return "-";
+      }
+
+      const normalized = String(value)
+        .replace(/,/g, "")
+        .trim();
+
+      const number = Number(normalized);
+
+      if (Number.isFinite(number)) {
+        return new Intl.NumberFormat(
+          "th-TH",
+          {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+          }
+        ).format(number) + " บาท";
+      }
+
+      return String(value);
+    }
+
+    function setText(elementId, value) {
+      document.getElementById(
+        elementId
+      ).textContent =
+        value === undefined ||
+        value === null ||
+        String(value).trim() === ""
+          ? "-"
+          : String(value);
+    }
+
+    function setLoading(isLoading) {
+      searchButton.disabled = isLoading;
+      registrationInput.disabled = isLoading;
+
+      searchButton.textContent =
+        isLoading
+          ? "กำลังค้นหา..."
+          : "ค้นหา";
+
+      if (isLoading) {
+        showMessage(
+          "กำลังเชื่อมต่อ CorpusX กรุณารอสักครู่...",
           "loading"
-        ).style.display="none";
-
+        );
+      }
     }
 
-}
+    function showMessage(text, type) {
+      messageBox.textContent = text;
+      messageBox.className =
+        "message " + type;
+    }
 
-</script>
+    function hideResult() {
+      resultCard.classList.remove("visible");
 
+      document.getElementById(
+        "rawJson"
+      ).textContent = "";
+    }
+  </script>
 </body>
 </html>
