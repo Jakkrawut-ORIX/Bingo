@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>CorpusX Search</title>
+
+<style>
+
+body{
+    font-family:Arial;
+    background:#f4f6f9;
+    margin:0;
+    padding:30px;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,.1);
+}
+
+input{
+    width:100%;
+    padding:10px;
+    margin-top:5px;
+    margin-bottom:15px;
+}
+
+button{
+    padding:10px 20px;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#1d4ed8;
+}
+
+.loading{
+    color:red;
+    display:none;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,td{
+    border:1px solid #ddd;
+    padding:8px;
+}
+
+th{
+    background:#2563eb;
+    color:white;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<h2>ค้นหาข้อมูลบริษัท</h2>
+
+<label>เลขทะเบียนบริษัท</label>
+
+<input
+id="registrationId"
+placeholder="0105538107794">
+
+<button onclick="searchCompany()">
+
+ค้นหา
+
+</button>
+
+<p
+class="loading"
+id="loading">
+
+กำลังค้นหา...
+
+</p>
+
+</div>
+
+<br>
+
+<div
+class="card"
+id="resultCard"
+style="display:none">
+
+<h3>ข้อมูลบริษัท</h3>
+
+<p>
+ชื่อบริษัท :
+<span id="companyName"></span>
+</p>
+
+<p>
+เลขทะเบียน :
+<span id="companyNo"></span>
+</p>
+
+<p>
+สถานะ :
+<span id="companyStatus"></span>
+</p>
+
+<p>
+ทุนจดทะเบียน :
+<span id="capital"></span>
+</p>
+
+</div>
+
+</div>
+
+<script>
+
+const WORKER_URL =
+"https://YOUR-WORKER.workers.dev";
+
+const API_KEY =
+"ORIX2026";
+
+async function searchCompany(){
+
+    const regNo =
+      document.getElementById(
+        "registrationId"
+      ).value;
+
+    if(!regNo){
+
+        alert(
+          "กรุณากรอกเลขทะเบียน"
+        );
+
+        return;
+    }
+
+    document
+      .getElementById(
+        "loading"
+      ).style.display="block";
+
+    try{
+
+        const response =
+          await fetch(
+            WORKER_URL,
+            {
+              method:"POST",
+              headers:{
+                "Content-Type":
+                  "application/json",
+                "x-api-key":
+                  API_KEY
+              },
+              body:JSON.stringify({
+                registrationId:
+                  regNo
+              })
+            }
+          );
+
+        const data =
+          await response.json();
+
+        console.log(data);
+
+        const company =
+          data.companyInfo || {};
+
+        document
+          .getElementById(
+            "companyName"
+          ).innerText =
+          company.companyName || "-";
+
+        document
+          .getElementById(
+            "companyNo"
+          ).innerText =
+          company.registrationNo || "-";
+
+        document
+          .getElementById(
+            "companyStatus"
+          ).innerText =
+          company.status || "-";
+
+        document
+          .getElementById(
+            "capital"
+          ).innerText =
+          company.registeredCapital || "-";
+
+        document
+          .getElementById(
+            "resultCard"
+          ).style.display="block";
+
+    }
+    catch(err){
+
+      alert(err.message);
+
+    }
+    finally{
+
+      document
+        .getElementById(
+          "loading"
+        ).style.display="none";
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>
